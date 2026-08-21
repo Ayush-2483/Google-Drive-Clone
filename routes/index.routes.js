@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/home', requireAuth, (req,res)=>{
-    res.render('home')
+    res.render('home', { user: req.user })
 })
 
 

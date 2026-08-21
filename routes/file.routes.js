@@ -4,6 +4,8 @@ const path = require('path');
 
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary.config');
+const fileModel = require('../models/file.model');
+const requireAuth = require('../middleware/auth.middleware');
 
 // Multer stores the uploaded file temporarily in memory
 const upload = multer({
@@ -15,7 +17,20 @@ const upload = multer({
 // Upload File
 // ===============================
 
-router.post('/upload-file', upload.single('file'), async (req, res) => {
+router.get('/files', requireAuth, async (req, res) => {
+    try {
+        const files = await fileModel.find({ owner: req.user.userId })
+            .sort({ uploadedAt: -1 })
+            .lean();
+
+        res.json(files);
+    } catch (error) {
+        console.error('File list error:', error);
+        res.status(500).json({ message: 'Unable to load files' });
+    }
+});
+
+router.post('/upload-file', requireAuth, upload.single('file'), async (req, res) => {
 
     try {
 
@@ -64,7 +79,7 @@ router.post('/upload-file', upload.single('file'), async (req, res) => {
             const stream = cloudinary.uploader.upload_stream(
                 {
                     resource_type: resourceType,
-                    folder: 'google-drive-clone',
+                    folder: `google-drive-clone/${req.user.userId}`,
                     public_id: publicId
                 },
 
@@ -99,13 +114,16 @@ router.post('/upload-file', upload.single('file'), async (req, res) => {
         // Response
         // ===============================
 
-        res.json({
+        const savedFile = await fileModel.create({
+            owner: req.user.userId,
             name: req.file.originalname,
             type: req.file.mimetype,
             size: req.file.size,
             url: result.secure_url,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: new Date()
         });
+
+        res.json(savedFile);
 
 
     } catch (error) {
