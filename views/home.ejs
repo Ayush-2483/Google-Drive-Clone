@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drive | My Drive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --blue: #1a73e8; --ink: #202124; --muted: #5f6368; --line: #dadce0; --surface: #f8fafd; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--surface); color: var(--ink); font-family: Inter, sans-serif; }
+    h1, h2, h3, button, .brand { font-family: 'Google Sans', Inter, sans-serif; }
+    .sidebar { background: #fff; border-right: 1px solid var(--line); }
+    .nav-link { color: var(--muted); transition: background .18s, color .18s; }
+    .nav-link:hover { background: #f1f3f4; color: var(--ink); }
+    .nav-link.active { background: #d3e3fd; color: #174ea6; font-weight: 600; }
+    .search { background: #e9eef6; }
+    .search:focus-within { background: #fff; box-shadow: 0 1px 3px #0002; }
+    .folder, .file-card { border: 1px solid var(--line); background: #fff; transition: box-shadow .18s, border-color .18s; }
+    .folder:hover, .file-card:hover { border-color: #b7c9e8; box-shadow: 0 2px 8px #3c404326; }
+    .file-card.list-card { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 16px; }
+    .dropzone { border: 1px dashed #8ab4f8; background: #f4f8fe; }
+    .dropzone.dragging { background: #e8f0fe; border-color: var(--blue); }
+    #newMenu { box-shadow: 0 4px 16px #3c404333; }
+    .fade { animation: fade .3s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen lg:flex">
+    <aside class="sidebar w-full px-4 py-5 lg:fixed lg:inset-y-0 lg:w-64">
+      <a href="/home" class="brand flex items-center gap-2 px-3 text-[22px] text-[#5f6368]"><span class="text-3xl text-[#4285f4]">D</span> Drive</a>
+      <div class="relative mt-7">
+        <button id="newButton" type="button" class="flex items-center gap-3 rounded-2xl border border-[#dadce0] bg-white px-5 py-3 text-base shadow-sm transition hover:shadow-md"><span class="text-2xl font-light">＋</span> New</button>
+        <div id="newMenu" class="absolute left-0 top-14 z-20 hidden w-52 rounded-xl border border-[#dadce0] bg-white py-2 text-sm">
+          <button id="newUpload" type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#f1f3f4]">↑ <span>File upload</span></button>
+          <button id="newFolder" type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#f1f3f4]">▰ <span>New folder</span></button>
+        </div>
+      </div>
+      <nav class="mt-7 space-y-1" aria-label="Drive navigation">
+        <a href="#my-drive" class="nav-link active flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">▣ <span>My Drive</span></a>
+        <a href="#computers" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">▰ <span>Computers</span></a>
+        <a href="#shared" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">♟ <span>Shared with me</span></a>
+        <a href="#recent" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">◷ <span>Recent</span></a>
+        <a href="#starred" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">★ <span>Starred</span></a>
+        <a href="#trash" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">⌫ <span>Trash</span></a>
+      </nav>
+      <div class="mt-7 border-t border-[#dadce0] pt-5"><a href="#storage" class="nav-link flex items-center gap-4 rounded-r-full px-4 py-2.5 text-sm">▰ <span>Storage</span></a><div class="mt-4 px-4"><div class="h-2 overflow-hidden rounded-full bg-[#e0e0e0]"><div id="storageBar" class="h-full rounded-full bg-[#1a73e8]" style="width: 1%"></div></div><p id="storageLabel" class="mt-2 text-xs text-[#5f6368]">0 MB of 15 GB used</p><button type="button" class="mt-3 text-xs font-medium text-[#1a73e8]">Get more storage</button></div></div>
+    </aside>
+
+    <main class="w-full lg:ml-64">
+      <header class="flex flex-wrap items-center gap-4 px-5 py-4 sm:px-8">
+        <div class="search flex h-12 w-full max-w-2xl items-center gap-3 rounded-full px-4"><span class="text-2xl text-[#5f6368]">⌕</span><input id="search" class="w-full bg-transparent text-base outline-none placeholder:text-[#5f6368]" placeholder="Search in Drive" aria-label="Search in Drive"><span class="text-xl text-[#5f6368]">⌕</span></div>
+        <div class="ml-auto hidden items-center gap-5 text-[#5f6368] sm:flex"><button title="Help" class="text-lg">?</button><button title="Settings" class="text-lg">⚙</button><div class="grid h-10 w-10 place-items-center rounded-full bg-[#1a73e8] font-medium text-white">A</div></div>
+      </header>
+
+      <div class="border-t border-[#dadce0] bg-white px-5 py-7 sm:px-8">
+        <div class="flex flex-wrap items-center justify-between gap-4"><h1 class="text-3xl font-normal">My Drive</h1><div class="flex items-center gap-2"><button id="gridView" title="Grid view" type="button" class="rounded-lg border border-[#dadce0] bg-[#e8f0fe] px-3 py-2 text-lg text-[#174ea6]">▦</button><button id="listView" title="List view" type="button" class="rounded-lg border border-transparent px-3 py-2 text-lg text-[#5f6368] hover:bg-[#f1f3f4]">☷</button><button id="sortButton" type="button" class="rounded-lg border border-[#dadce0] px-4 py-2 text-sm text-[#3c4043] hover:bg-[#f1f3f4]">Sort ▾</button></div></div>
+
+        <section class="mt-8"><h2 class="mb-4 text-sm font-medium text-[#3c4043]">Folders</h2><div id="folders" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><button class="folder flex items-center gap-3 rounded-xl p-4 text-left"><span class="text-2xl text-[#fbbc04]">▰</span><span class="min-w-0"><strong class="block truncate text-sm font-medium">Documents</strong><small class="text-xs text-[#5f6368]">12 files</small></span><span class="ml-auto text-[#5f6368]">⋮</span></button><button class="folder flex items-center gap-3 rounded-xl p-4 text-left"><span class="text-2xl text-[#fbbc04]">▰</span><span class="min-w-0"><strong class="block truncate text-sm font-medium">Projects</strong><small class="text-xs text-[#5f6368]">8 files</small></span><span class="ml-auto text-[#5f6368]">⋮</span></button><button class="folder flex items-center gap-3 rounded-xl p-4 text-left"><span class="text-2xl text-[#fbbc04]">▰</span><span class="min-w-0"><strong class="block truncate text-sm font-medium">Photos</strong><small class="text-xs text-[#5f6368]">42 files</small></span><span class="ml-auto text-[#5f6368]">⋮</span></button><button class="folder flex items-center gap-3 rounded-xl p-4 text-left"><span class="text-2xl text-[#fbbc04]">▰</span><span class="min-w-0"><strong class="block truncate text-sm font-medium">College</strong><small class="text-xs text-[#5f6368]">24 files</small></span><span class="ml-auto text-[#5f6368]">⋮</span></button></div></section>
+
+        <section id="recent" class="mt-9"><div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-medium text-[#3c4043]">Files</h2><span id="fileCount" class="text-xs text-[#5f6368]">0 files</span></div><section id="uploadPanel" class="dropzone mb-6 hidden rounded-xl p-7 text-center"><form id="uploadForm" action="/upload-file" method="post" enctype="multipart/form-data"><div class="text-3xl text-[#1a73e8]">↑</div><h2 class="mt-2 text-lg font-medium">Upload to My Drive</h2><p class="mt-1 text-sm text-[#5f6368]">Choose an image or PDF, or drop it here.</p><label for="fileInput" class="mt-4 inline-block cursor-pointer rounded-lg bg-[#1a73e8] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1769d1]">Choose file</label><input id="fileInput" name="file" type="file" class="hidden" accept="image/*,.pdf" required><p id="selectedFile" class="mt-3 hidden text-sm text-[#174ea6]"></p><button id="submitButton" type="submit" class="mt-3 hidden rounded-lg border border-[#1a73e8] px-5 py-2 text-sm font-medium text-[#1a73e8]">Upload</button><p id="uploadStatus" class="mt-3 hidden text-sm"></p></form></section><div id="fileGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div id="emptyState" class="col-span-full rounded-xl border border-dashed border-[#dadce0] py-14 text-center"><div class="text-3xl text-[#5f6368]">▤</div><p class="mt-3 text-sm text-[#5f6368]">No files yet. Select New → File upload to add one.</p></div></div></section>
+      </div>
+    </main>
+  </div>
+  <script>
+    const files = JSON.parse(localStorage.getItem('drive-files') || '[]');
+    const fileInput = document.querySelector('#fileInput'); const form = document.querySelector('#uploadForm'); const panel = document.querySelector('#uploadPanel'); const grid = document.querySelector('#fileGrid'); const empty = document.querySelector('#emptyState');
+    const size = bytes => bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
+    const esc = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    function render() { const query = document.querySelector('#search').value.toLowerCase(); document.querySelectorAll('.file-card').forEach(card => card.remove()); const visible = files.filter(file => file.name.toLowerCase().includes(query)); empty.classList.toggle('hidden', visible.length > 0); document.querySelector('#fileCount').textContent = `${visible.length} file${visible.length === 1 ? '' : 's'}`; visible.forEach(file => { const image = file.type.startsWith('image/'); const card = document.createElement('article'); card.className = 'file-card fade overflow-hidden rounded-xl'; card.innerHTML = `<div class="flex h-36 items-center justify-center bg-[#f1f3f4]">${image ? `<img src="${file.url}" alt="${esc(file.name)}" class="h-full w-full object-cover">` : '<span class="text-5xl text-[#5f6368]">▤</span>'}</div><div class="flex items-center gap-3 p-3"><span class="text-xl ${image ? 'text-[#34a853]' : 'text-[#ea4335]'}">${image ? '▧' : '▤'}</span><div class="min-w-0 flex-1"><h3 class="truncate text-sm font-medium" title="${esc(file.name)}">${esc(file.name)}</h3><p class="mt-1 text-xs text-[#5f6368]">${size(file.size)}</p></div><a href="${file.url}" target="_blank" rel="noopener noreferrer" title="Open file" class="text-lg text-[#5f6368] hover:text-[#1a73e8]">↗</a></div>`; grid.appendChild(card); }); const total = files.reduce((sum, file) => sum + file.size, 0); document.querySelector('#storageLabel').textContent = `${size(total)} of 15 GB used`; document.querySelector('#storageBar').style.width = `${Math.max(1, total / (15 * 1024 * 1024 * 1024) * 100)}%`; }
+    function openUpload() { panel.classList.remove('hidden'); panel.scrollIntoView({ behavior: 'smooth', block: 'center' }); fileInput.click(); }
+    document.querySelector('#newButton').onclick = () => document.querySelector('#newMenu').classList.toggle('hidden'); document.querySelector('#newUpload').onclick = () => { document.querySelector('#newMenu').classList.add('hidden'); openUpload(); }; document.querySelector('#newFolder').onclick = () => { document.querySelector('#newMenu').classList.add('hidden'); const name = prompt('Folder name'); if (name) { const folder = document.createElement('button'); folder.className = 'folder flex items-center gap-3 rounded-xl p-4 text-left'; folder.innerHTML = `<span class="text-2xl text-[#fbbc04]">▰</span><span class="min-w-0"><strong class="block truncate text-sm font-medium">${esc(name)}</strong><small class="text-xs text-[#5f6368]">0 files</small></span><span class="ml-auto text-[#5f6368]">⋮</span>`; document.querySelector('#folders').appendChild(folder); } }; document.querySelector('#search').oninput = render; document.querySelector('#gridView').onclick = () => { grid.className = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-4'; }; document.querySelector('#listView').onclick = () => { grid.className = 'grid gap-2'; document.querySelectorAll('.file-card').forEach(card => card.classList.add('list-card')); }; document.querySelector('#sortButton').onclick = () => { files.sort((a, b) => a.name.localeCompare(b.name)); render(); };
+    fileInput.onchange = () => { const file = fileInput.files[0]; if (!file) return; document.querySelector('#selectedFile').textContent = `Selected: ${file.name}`; document.querySelector('#selectedFile').classList.remove('hidden'); document.querySelector('#submitButton').classList.remove('hidden'); };
+    ['dragenter', 'dragover'].forEach(event => panel.addEventListener(event, e => { e.preventDefault(); panel.classList.add('dragging'); })); panel.addEventListener('dragleave', () => panel.classList.remove('dragging')); panel.addEventListener('drop', e => { e.preventDefault(); panel.classList.remove('dragging'); fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); });
+    form.onsubmit = async event => { event.preventDefault(); const status = document.querySelector('#uploadStatus'); const button = document.querySelector('#submitButton'); button.disabled = true; button.textContent = 'Uploading...'; status.className = 'mt-3 text-sm text-[#1a73e8]'; status.textContent = 'Uploading to Drive...'; status.classList.remove('hidden'); try { const response = await fetch(form.action, { method: 'POST', body: new FormData(form) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || data.message); files.unshift(data); localStorage.setItem('drive-files', JSON.stringify(files)); render(); status.className = 'mt-3 text-sm text-[#188038]'; status.textContent = 'Uploaded. Your file is ready to open.'; form.reset(); document.querySelector('#selectedFile').classList.add('hidden'); button.classList.add('hidden'); } catch (error) { status.className = 'mt-3 text-sm text-[#d93025]'; status.textContent = error.message || 'Upload failed.'; } finally { button.disabled = false; button.textContent = 'Upload'; } };
+    render();
+  </script>
+</body>
+</html>
