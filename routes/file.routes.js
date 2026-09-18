@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const crypto = require('crypto');
 
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary.config');
@@ -23,10 +24,39 @@ router.get('/files', requireAuth, async (req, res) => {
             .sort({ uploadedAt: -1 })
             .lean();
 
-        res.json(files);
+        const filesWithShareLinks = await Promise.all(files.map(async file => {
+            if (!file.shareToken) {
+                file.shareToken = crypto.randomBytes(32).toString('hex');
+                await fileModel.updateOne({ _id: file._id }, { shareToken: file.shareToken });
+            }
+
+            return {
+                ...file,
+                shareUrl: `${req.protocol}://${req.get('host')}/shared/${file._id}/${file.shareToken}`
+            };
+        }));
+
+        res.json(filesWithShareLinks);
     } catch (error) {
         console.error('File list error:', error);
         res.status(500).json({ message: 'Unable to load files' });
+    }
+});
+
+router.get('/shared/:fileId/:shareToken', async (req, res) => {
+    try {
+        const file = await fileModel.findOne({
+            _id: req.params.fileId,
+            shareToken: req.params.shareToken
+        }).lean();
+
+        if (!file) {
+            return res.status(404).send('This share link is invalid or has expired.');
+        }
+
+        return res.redirect(file.url);
+    } catch (error) {
+        return res.status(404).send('This share link is invalid or has expired.');
     }
 });
 
@@ -120,10 +150,14 @@ router.post('/upload-file', requireAuth, upload.single('file'), async (req, res)
             type: req.file.mimetype,
             size: req.file.size,
             url: result.secure_url,
+            shareToken: crypto.randomBytes(32).toString('hex'),
             uploadedAt: new Date()
         });
 
-        res.json(savedFile);
+        res.json({
+            ...savedFile.toObject(),
+            shareUrl: `${req.protocol}://${req.get('host')}/shared/${savedFile._id}/${savedFile.shareToken}`
+        });
 
 
     } catch (error) {

@@ -24,6 +24,12 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    shareToken: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
     uploadedAt: {
         type: Date,
         default: Date.now
